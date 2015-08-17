@@ -37,6 +37,35 @@ namespace Insight.Tests
 				Assert.AreEqual(11, connection.ExecuteScalarSql<int>("SELECT AlcoholPts FROM Beer18"));
 			}
 		}
+
+		[Test]
+		public void Given_a_null_result_When_querying_for_a_scalar_int_Then_the_result_is_not_silently_converted()
+		{
+			using (var connection = ConnectionWithTransaction())
+			{
+				connection.ExecuteSql("create table NullsAreWeird (id int identity, nullableint int)");
+				connection.ExecuteSql(@"insert into NullsAreWeird (nullableint) values (null)");
+
+				TestDelegate act = () => connection.ExecuteScalarSql<int>("select nullableint from NullsAreWeird");
+
+				Assert.That(act, Throws.Exception);
+			}
+		}
+
+		[Test]
+		public void Given_a_null_result_When_expecting_an_int_Then_the_result_is_not_silently_converted()
+		{
+			using (var connection = ConnectionWithTransaction())
+			{
+				connection.ExecuteSql("create table NullsAreWeird (id int identity, nullableint int)");
+				connection.ExecuteSql(@"insert into NullsAreWeird (nullableint) values (null)");
+
+				TestDelegate act = () => connection.QuerySql<int>("select nullableint from NullsAreWeird").Single();
+
+				Assert.That(act, Throws.Exception);
+			}
+		}
+
 		#endregion
 	}
 }
